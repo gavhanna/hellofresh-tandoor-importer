@@ -64,9 +64,18 @@ router.post('/', async (req, res, next) => {
       }
     }
 
-    // DON'T cleanup temp files or remove session - allow re-import for debugging
-    // User can click "Import to Tandoor" multiple times without re-parsing
-    logger.info(`Session ${sessionId} preserved for re-import (files not cleaned up)`);
+    // Cleanup temp files
+    const filesToClean = [
+      session.images.front,
+      session.images.back,
+      session.images.frontProcessed,
+      session.images.backProcessed,
+    ].filter(Boolean);
+
+    await cleanupTempFiles(filesToClean);
+
+    // Remove session
+    sessions.delete(sessionId);
 
     logger.success(`Recipe imported successfully: ${result.id}`);
 
