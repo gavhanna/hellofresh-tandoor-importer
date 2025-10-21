@@ -150,33 +150,108 @@ class TandoorClient {
   }
 
   /**
-   * Upload image to a recipe
-   * Note: This may require a different endpoint or approach
+   * Upload image to a recipe using PUT method
    */
   async uploadRecipeImage(recipeId, imagePath) {
+    logger.info(`Uploading image for recipe ${recipeId}: ${imagePath}`);
+
+    // Verify file exists
+    if (!fs.existsSync(imagePath)) {
+      logger.error(`Image file not found: ${imagePath}`);
+      throw new Error('Image file not found');
+    }
+
+    const fileStats = fs.statSync(imagePath);
+    logger.debug(`Image file size: ${fileStats.size} bytes`);
+
+    // Method 1: Try PUT with multipart form data (Tandoor's preferred method)
     try {
-      logger.info(`Uploading image for recipe ${recipeId}`);
+      logger.info(`Attempting PUT to /api/recipe/${recipeId}/image/`);
 
+      const imageStream = fs.createReadStream(imagePath);
       const formData = new FormData();
-      formData.append('image', fs.createReadStream(imagePath));
 
-      const response = await axios.post(
+      // Append image with proper mimetype
+      formData.append('image', imageStream, {
+        filename: 'recipe.jpg',
+        contentType: 'image/jpeg',
+        knownLength: fileStats.size,
+      });
+
+      // Get headers with proper boundary
+      const formHeaders = formData.getHeaders();
+
+      logger.debug('Form headers:', formHeaders);
+
+      const response = await axios.put(
         `${this.baseURL}/api/recipe/${recipeId}/image/`,
         formData,
         {
           headers: {
-            ...formData.getHeaders(),
+            ...formHeaders,
             Authorization: `Bearer ${this.apiToken}`,
           },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
         }
       );
 
       logger.success(`Image uploaded for recipe ${recipeId}`);
+      logger.debug('Upload response:', response.data);
+
+      // Check if image is actually set
+      if (response.data.image) {
+        logger.success(`Image URL: ${response.data.image}`);
+      } else {
+        logger.warn('Image field is still null in response!');
+      }
+
       return response.data;
     } catch (error) {
-      logger.error('Failed to upload image:', error.message);
-      // Don't throw - image upload is optional
-      return null;
+      logger.error('PUT to /api/recipe/{id}/image/ failed:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+      });
+
+      // Method 2: Try PATCH to /api/recipe/{id}/ with multipart
+      try {
+        logger.info('Trying PATCH to /api/recipe/{id}/');
+
+        const imageStream = fs.createReadStream(imagePath);
+        const formData = new FormData();
+        formData.append('image', imageStream, {
+          filename: 'recipe.jpg',
+          contentType: 'image/jpeg',
+        });
+
+        const response = await axios.patch(
+          `${this.baseURL}/api/recipe/${recipeId}/`,
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+              Authorization: `Bearer ${this.apiToken}`,
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+          }
+        );
+
+        logger.success(`Image uploaded via PATCH for recipe ${recipeId}`);
+        logger.debug('Upload response:', response.data);
+        return response.data;
+      } catch (patchError) {
+        logger.error('PATCH also failed:', {
+          status: patchError.response?.status,
+          statusText: patchError.response?.statusText,
+          data: patchError.response?.data,
+          message: patchError.message,
+        });
+
+        throw new Error(`All image upload methods failed. Last error: ${patchError.message}`);
+      }
     }
   }
 }

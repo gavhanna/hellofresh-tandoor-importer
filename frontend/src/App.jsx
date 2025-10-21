@@ -70,8 +70,14 @@ export default function App() {
       const response = await importRecipe(sessionId, recipeData);
 
       if (response.success) {
-        setStatus('success');
+        // Show success briefly, then reset to allow re-import
         setTandoorUrl(response.url);
+
+        // Show success message for 3 seconds, then allow re-import
+        setTimeout(() => {
+          setStatus(null);
+          setTandoorUrl(null);
+        }, 3000);
       } else {
         throw new Error(response.message || 'Import failed');
       }
