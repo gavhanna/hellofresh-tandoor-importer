@@ -69,16 +69,47 @@ class TandoorClient {
    * Transform our recipe format to Tandoor's expected format
    */
   transformToTandoorFormat(recipeData) {
+    // Convert ingredients to Tandoor format
+    const tandoorIngredients = recipeData.ingredients.map((ing) => {
+      const ingredient = {
+        food: { name: ing.name },
+        amount: 0,
+      };
+
+      // Try to parse amount - could be number, fraction, or string
+      if (ing.amount) {
+        const amountStr = ing.amount.toString().trim();
+        // Handle fractions like "1/2"
+        if (amountStr.includes('/')) {
+          const parts = amountStr.split('/');
+          ingredient.amount = parseFloat(parts[0]) / parseFloat(parts[1]);
+        } else {
+          ingredient.amount = parseFloat(amountStr) || 0;
+        }
+      }
+
+      // Add unit if present
+      if (ing.unit) {
+        ingredient.unit = { name: ing.unit };
+      }
+
+      return ingredient;
+    });
+
+    // Create steps - put all ingredients in the first step
+    const steps = recipeData.instructions.map((instruction, index) => ({
+      instruction: instruction.text,
+      ingredients: index === 0 ? tandoorIngredients : [],
+      order: instruction.step,
+    }));
+
     const tandoorRecipe = {
       name: recipeData.title,
       description: recipeData.description || '',
       servings: recipeData.servings,
       working_time: recipeData.prepTime || 0,
       waiting_time: recipeData.cookTime || 0,
-      steps: recipeData.instructions.map((instruction) => ({
-        instruction: instruction.text,
-        order: instruction.step,
-      })),
+      steps: steps,
     };
 
     // Add keywords/tags
@@ -86,15 +117,34 @@ class TandoorClient {
       tandoorRecipe.keywords = recipeData.tags.map((tag) => ({ name: tag }));
     }
 
-    // Add nutrition data if available
+    // Add nutrition data if available - Tandoor requires specific format
     if (recipeData.nutrition) {
-      // Note: Tandoor's nutrition format may differ
-      // This is a basic implementation that may need adjustment
+      // Extract numeric values from strings like "45g"
+      const parseNutrition = (value) => {
+        if (!value) return 0;
+        if (typeof value === 'number') return value;
+        // Extract number from string like "45g" or "45"
+        const match = value.toString().match(/[\d.]+/);
+        return match ? parseFloat(match[0]) : 0;
+      };
+
       tandoorRecipe.nutrition = {
-        calories: recipeData.nutrition.calories,
-        // Add other nutrition fields as supported by Tandoor
+        calories: recipeData.nutrition.calories || 0,
+        carbohydrates: parseNutrition(recipeData.nutrition.carbohydrates),
+        fats: parseNutrition(recipeData.nutrition.fat),
+        proteins: parseNutrition(recipeData.nutrition.protein),
+      };
+    } else {
+      // Tandoor requires these fields, provide defaults
+      tandoorRecipe.nutrition = {
+        calories: 0,
+        carbohydrates: 0,
+        fats: 0,
+        proteins: 0,
       };
     }
+
+    logger.debug('Transformed recipe for Tandoor:', JSON.stringify(tandoorRecipe, null, 2));
 
     return tandoorRecipe;
   }
