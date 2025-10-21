@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hellofresh-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - TANDOOR_URL=${TANDOOR_URL}
+      - TANDOOR_API_TOKEN=${TANDOOR_API_TOKEN}
+      - MAX_FILE_SIZE=10485760
+      - UPLOAD_DIR=./uploads
+    volumes:
+      - ./backend/uploads:/app/uploads
+    restart: unless-stopped
+    networks:
+      - hellofresh-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hellofresh-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - hellofresh-network
+
+networks:
+  hellofresh-network:
+    driver: bridge
