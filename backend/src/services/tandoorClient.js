@@ -168,10 +168,9 @@ class TandoorClient {
         }
       }
 
-      // Add unit if present
-      if (ing.unit) {
-        ingredient.unit = { name: ing.unit };
-      }
+      // Add unit - Tandoor REQUIRES this field even if empty
+      // Use provided unit or default to empty string for whole items
+      ingredient.unit = { name: ing.unit || '' };
 
       return ingredient;
     });
