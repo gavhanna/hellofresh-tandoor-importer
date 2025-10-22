@@ -43,9 +43,7 @@ router.post('/check-duplicate', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
   try {
-    logger.info('Import request received');
     const { sessionId, recipeData } = req.body;
-    logger.info(`SessionId: ${sessionId}, Has recipeData: ${!!recipeData}`);
 
     // Validate request
     if (!sessionId) {

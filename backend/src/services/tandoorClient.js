@@ -104,20 +104,6 @@ class TandoorClient {
       // Transform our recipe data to Tandoor's format
       const tandoorRecipe = this.transformToTandoorFormat(recipeData);
 
-      // Log the steps structure for debugging
-      logger.info('Steps being sent to Tandoor:');
-      tandoorRecipe.steps.forEach((step, idx) => {
-        logger.info(`  Step ${idx}: instruction="${step.instruction?.substring(0, 50)}...", ingredients=${step.ingredients?.length || 0}, order=${step.order}`);
-      });
-
-      // Log first step in full detail
-      if (tandoorRecipe.steps.length > 0) {
-        logger.info('First step (full):', JSON.stringify(tandoorRecipe.steps[0], null, 2));
-      }
-      if (tandoorRecipe.steps.length > 1) {
-        logger.info('Second step (full):', JSON.stringify(tandoorRecipe.steps[1], null, 2));
-      }
-
       const response = await this.client.post('/recipe/', tandoorRecipe);
 
       logger.success(`Recipe created in Tandoor with ID: ${response.data.id}`);
