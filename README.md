@@ -107,6 +107,10 @@ Edit `.env`:
 MISTRAL_API_KEY=your_mistral_api_key_here
 TANDOOR_URL=http://192.168.1.100:8080
 TANDOOR_API_TOKEN=your_tandoor_api_token_here
+
+# Optional: Customize ports (defaults: 3001 and 5173)
+BACKEND_PORT=3001
+FRONTEND_PORT=5173
 ```
 
 #### 2. Build and run with Docker Compose

@@ -31,11 +31,15 @@ cp .env.example .env
 nano .env
 ```
 
-Update these three values:
+Update these values:
 ```env
 MISTRAL_API_KEY=sk-xxxxxxxxxxxxxxxxx    # Your Mistral API key
 TANDOOR_URL=http://192.168.1.100:8080  # Your Tandoor URL
 TANDOOR_API_TOKEN=Token_xxxxxxxxxxxxxx # Your Tandoor API token
+
+# Optional: Change ports if needed (defaults shown)
+BACKEND_PORT=3001
+FRONTEND_PORT=5173
 ```
 
 **How to get Tandoor API token:**
