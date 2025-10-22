@@ -36,6 +36,65 @@ class TandoorClient {
   }
 
   /**
+   * Search for recipes by title
+   */
+  async searchRecipes(query) {
+    try {
+      logger.info(`Searching Tandoor for recipes matching: ${query}`);
+
+      const response = await this.client.get('/recipe/', {
+        params: {
+          query: query,
+          page_size: 10, // Limit results
+        },
+      });
+
+      logger.debug(`Found ${response.data.count} matching recipes`);
+
+      return response.data.results || [];
+    } catch (error) {
+      logger.error('Failed to search recipes:', error.message);
+      throw new Error(`Failed to search recipes: ${error.message}`);
+    }
+  }
+
+  /**
+   * Check if a recipe with similar title already exists
+   */
+  async checkDuplicate(title) {
+    try {
+      const results = await this.searchRecipes(title);
+
+      // Check for exact or very similar matches
+      const normalizedTitle = title.toLowerCase().trim();
+      const duplicates = results.filter(recipe => {
+        const recipeTitle = recipe.name.toLowerCase().trim();
+        return recipeTitle === normalizedTitle ||
+               recipeTitle.includes(normalizedTitle) ||
+               normalizedTitle.includes(recipeTitle);
+      });
+
+      if (duplicates.length > 0) {
+        logger.warn(`Found ${duplicates.length} potential duplicate(s) for "${title}"`);
+        return {
+          isDuplicate: true,
+          matches: duplicates.map(r => ({
+            id: r.id,
+            name: r.name,
+            url: `${this.baseURL}/view/recipe/${r.id}`,
+          })),
+        };
+      }
+
+      return { isDuplicate: false, matches: [] };
+    } catch (error) {
+      logger.error('Failed to check for duplicates:', error.message);
+      // Don't fail the import if duplicate check fails, just warn
+      return { isDuplicate: false, matches: [], error: error.message };
+    }
+  }
+
+  /**
    * Create a new recipe in Tandoor
    */
   async createRecipe(recipeData) {

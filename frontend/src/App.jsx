@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import ImageUploader from './components/ImageUploader';
 import RecipePreview from './components/RecipePreview';
 import ProcessingStatus from './components/ProcessingStatus';
-import { uploadRecipeCards, importRecipe } from './services/api';
+import { uploadRecipeCards, importRecipe, checkDuplicate } from './services/api';
 
 export default function App() {
   const [frontImage, setFrontImage] = useState(null);
@@ -12,6 +12,7 @@ export default function App() {
   const [recipeData, setRecipeData] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [tandoorUrl, setTandoorUrl] = useState(null);
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
 
   const handleImagesSelected = useCallback((field, file) => {
       if (!file) {
@@ -64,7 +65,7 @@ export default function App() {
       }
   };
 
-  const handleImport = async () => {
+  const handleImport = async (force = false) => {
       if (!sessionId || !recipeData) {
           setError("No recipe data to import");
           setStatus("error");
@@ -72,8 +73,21 @@ export default function App() {
       }
 
       try {
+          // Check for duplicates first (unless forcing import)
+          if (!force) {
+              setStatus("checking");
+              const duplicateCheck = await checkDuplicate(recipeData.title);
+
+              if (duplicateCheck.isDuplicate && duplicateCheck.matches.length > 0) {
+                  setDuplicateWarning(duplicateCheck.matches);
+                  setStatus(null);
+                  return;
+              }
+          }
+
           setStatus("importing");
           setError(null);
+          setDuplicateWarning(null);
 
           const response = await importRecipe(sessionId, recipeData);
 
@@ -106,6 +120,7 @@ export default function App() {
       setStatus(null);
       setError(null);
       setTandoorUrl(null);
+      setDuplicateWarning(null);
   };
 
   return (
@@ -179,6 +194,56 @@ export default function App() {
                       </div>
                   )}
 
+                  {/* Duplicate Warning */}
+                  {duplicateWarning && duplicateWarning.length > 0 && (
+                      <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6">
+                          <div className="flex items-start">
+                              <div className="flex-shrink-0">
+                                  <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                  </svg>
+                              </div>
+                              <div className="ml-3 flex-1">
+                                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                                      Possible Duplicate Recipe Found
+                                  </h3>
+                                  <p className="text-yellow-700 mb-4">
+                                      The following recipe(s) in Tandoor may be duplicates:
+                                  </p>
+                                  <ul className="space-y-2 mb-4">
+                                      {duplicateWarning.map((match) => (
+                                          <li key={match.id} className="flex items-center justify-between bg-white rounded p-3">
+                                              <span className="font-medium text-gray-900">{match.name}</span>
+                                              <a
+                                                  href={match.url}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-blue-600 hover:text-blue-800 underline text-sm"
+                                              >
+                                                  View in Tandoor
+                                              </a>
+                                          </li>
+                                      ))}
+                                  </ul>
+                                  <div className="flex gap-3">
+                                      <button
+                                          onClick={() => setDuplicateWarning(null)}
+                                          className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                                      >
+                                          Cancel
+                                      </button>
+                                      <button
+                                          onClick={() => handleImport(true)}
+                                          className="flex-1 bg-yellow-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-colors"
+                                      >
+                                          Import Anyway
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+
                   {/* Recipe Preview */}
                   {recipeData && status !== "success" && (
                       <div>
@@ -189,7 +254,7 @@ export default function App() {
                               recipeData={recipeData}
                               onEdit={handleRecipeEdit}
                               onImport={handleImport}
-                              importing={status === "importing"}
+                              importing={status === "importing" || status === "checking"}
                           />
                       </div>
                   )}

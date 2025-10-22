@@ -12,6 +12,11 @@ export default function ProcessingStatus({ status, error }) {
       icon: '🔄',
       message: 'Extracting recipe data with AI...',
     },
+    checking: {
+      color: 'purple',
+      icon: '🔍',
+      message: 'Checking for duplicates...',
+    },
     importing: {
       color: 'indigo',
       icon: '📥',

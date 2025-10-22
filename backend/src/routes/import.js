@@ -8,6 +8,36 @@ import { recipeSchema } from '../models/recipe.schema.js';
 const router = express.Router();
 
 /**
+ * POST /api/import/check-duplicate
+ * Check if recipe already exists in Tandoor
+ */
+router.post('/check-duplicate', async (req, res, next) => {
+  try {
+    const { title } = req.body;
+
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing title',
+        message: 'title is required',
+      });
+    }
+
+    logger.info(`Checking for duplicate recipe: ${title}`);
+
+    const duplicateCheck = await tandoorClient.checkDuplicate(title);
+
+    res.json({
+      success: true,
+      ...duplicateCheck,
+    });
+  } catch (error) {
+    logger.error('Duplicate check error:', error);
+    next(error);
+  }
+});
+
+/**
  * POST /api/import
  * Import recipe to Tandoor
  */

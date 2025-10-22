@@ -30,6 +30,17 @@ export async function uploadRecipeCards(frontImage, backImage) {
 }
 
 /**
+ * Check if recipe already exists in Tandoor
+ */
+export async function checkDuplicate(title) {
+  const response = await api.post('/import/check-duplicate', {
+    title,
+  });
+
+  return response.data;
+}
+
+/**
  * Import recipe to Tandoor
  */
 export async function importRecipe(sessionId, recipeData) {
