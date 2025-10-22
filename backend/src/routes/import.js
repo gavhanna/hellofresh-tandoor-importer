@@ -43,10 +43,13 @@ router.post('/check-duplicate', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
   try {
+    logger.info('Import request received');
     const { sessionId, recipeData } = req.body;
+    logger.info(`SessionId: ${sessionId}, Has recipeData: ${!!recipeData}`);
 
     // Validate request
     if (!sessionId) {
+      logger.error('Missing sessionId in request');
       return res.status(400).json({
         success: false,
         error: 'Missing sessionId',
@@ -71,6 +74,7 @@ router.post('/', async (req, res, next) => {
     try {
       recipeSchema.parse(dataToImport);
     } catch (error) {
+      logger.error('Recipe data validation failed:', error.errors);
       return res.status(400).json({
         success: false,
         error: 'Invalid recipe data',
