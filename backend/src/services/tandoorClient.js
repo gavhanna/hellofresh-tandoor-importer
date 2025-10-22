@@ -105,7 +105,18 @@ class TandoorClient {
       const tandoorRecipe = this.transformToTandoorFormat(recipeData);
 
       // Log the steps structure for debugging
-      logger.debug('Steps being sent to Tandoor:', JSON.stringify(tandoorRecipe.steps, null, 2));
+      logger.info('Steps being sent to Tandoor:');
+      tandoorRecipe.steps.forEach((step, idx) => {
+        logger.info(`  Step ${idx}: instruction="${step.instruction?.substring(0, 50)}...", ingredients=${step.ingredients?.length || 0}, order=${step.order}`);
+      });
+
+      // Log first step in full detail
+      if (tandoorRecipe.steps.length > 0) {
+        logger.info('First step (full):', JSON.stringify(tandoorRecipe.steps[0], null, 2));
+      }
+      if (tandoorRecipe.steps.length > 1) {
+        logger.info('Second step (full):', JSON.stringify(tandoorRecipe.steps[1], null, 2));
+      }
 
       const response = await this.client.post('/recipe/', tandoorRecipe);
 
@@ -136,6 +147,8 @@ class TandoorClient {
    * Transform our recipe format to Tandoor's expected format
    */
   transformToTandoorFormat(recipeData) {
+    logger.info(`Transforming recipe with ${recipeData.ingredients?.length || 0} ingredients and ${recipeData.instructions?.length || 0} instructions`);
+
     // Convert ingredients to Tandoor format
     const tandoorIngredients = recipeData.ingredients.map((ing) => {
       const ingredient = {
@@ -220,8 +233,6 @@ class TandoorClient {
         proteins: 0,
       };
     }
-
-    logger.debug('Transformed recipe for Tandoor:', JSON.stringify(tandoorRecipe, null, 2));
 
     return tandoorRecipe;
   }
