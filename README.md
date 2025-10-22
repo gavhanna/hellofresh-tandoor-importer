@@ -5,6 +5,7 @@ A web application that automatically extracts recipe information from HelloFresh
 ## Features
 
 - 📸 Upload front and back images of HelloFresh recipe cards
+- 📱 Mobile camera support for easy scanning
 - 🤖 AI-powered data extraction using Mistral Pixtral vision model
 - ✏️ Review and edit extracted data before importing
 - 📥 Automatic import to Tandoor with all recipe details
@@ -85,7 +86,17 @@ Open your browser and navigate to [http://localhost:5173](http://localhost:5173)
 
 ## Quick Start (Docker)
 
-### 1. Set up environment variables
+### Using the deployment script (easiest)
+
+```bash
+./deploy.sh
+```
+
+Follow the prompts to configure and deploy the application.
+
+### Manual Docker deployment
+
+#### 1. Set up environment variables
 
 ```bash
 cp .env.example .env
@@ -98,27 +109,31 @@ TANDOOR_URL=http://192.168.1.100:8080
 TANDOOR_API_TOKEN=your_tandoor_api_token_here
 ```
 
-### 2. Build and run with Docker Compose
+#### 2. Build and run with Docker Compose
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 The application will be available at:
 - Frontend: [http://localhost:5173](http://localhost:5173)
 - Backend API: [http://localhost:3001](http://localhost:3001)
 
-### 3. View logs
+#### 3. View logs
 
 ```bash
 docker-compose logs -f
 ```
 
-### 4. Stop the application
+#### 4. Stop the application
 
 ```bash
 docker-compose down
 ```
+
+## Deploying on Unraid
+
+For detailed instructions on deploying to Unraid, see [UNRAID-DEPLOYMENT.md](UNRAID-DEPLOYMENT.md).
 
 ## Configuration
 
