@@ -104,6 +104,9 @@ class TandoorClient {
       // Transform our recipe data to Tandoor's format
       const tandoorRecipe = this.transformToTandoorFormat(recipeData);
 
+      // Log the steps structure for debugging
+      logger.debug('Steps being sent to Tandoor:', JSON.stringify(tandoorRecipe.steps, null, 2));
+
       const response = await this.client.post('/recipe/', tandoorRecipe);
 
       logger.success(`Recipe created in Tandoor with ID: ${response.data.id}`);
@@ -115,6 +118,11 @@ class TandoorClient {
       };
     } catch (error) {
       logger.error('Failed to create recipe in Tandoor:', error.response?.data || error.message);
+
+      // Log the full error details
+      if (error.response?.data) {
+        logger.error('Tandoor validation errors:', JSON.stringify(error.response.data, null, 2));
+      }
 
       if (error.response?.status === 401) {
         throw new Error('Invalid Tandoor API token. Please check your configuration.');
@@ -156,11 +164,21 @@ class TandoorClient {
     });
 
     // Create steps - put all ingredients in the first step
-    const steps = recipeData.instructions.map((instruction, index) => ({
-      instruction: instruction.text,
-      ingredients: index === 0 ? tandoorIngredients : [],
-      order: instruction.step,
-    }));
+    const steps = recipeData.instructions.map((instruction, index) => {
+      const step = {
+        instruction: instruction.text || instruction.toString(),
+        ingredients: index === 0 ? tandoorIngredients : [],
+        order: instruction.step || index + 1,
+      };
+
+      // Ensure instruction text is not empty
+      if (!step.instruction || step.instruction.trim() === '') {
+        logger.warn(`Step ${index + 1} has empty instruction text`);
+        step.instruction = `Step ${index + 1}`;
+      }
+
+      return step;
+    });
 
     const tandoorRecipe = {
       name: recipeData.title,
