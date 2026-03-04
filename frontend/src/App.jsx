@@ -7,6 +7,7 @@ import { uploadRecipeCards, importRecipe, checkDuplicate } from './services/api'
 export default function App() {
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
+  const [provider, setProvider] = useState('mistral');
   const [status, setStatus] = useState(null);
   const [error, setError] = useState(null);
   const [recipeData, setRecipeData] = useState(null);
@@ -43,7 +44,7 @@ export default function App() {
           setStatus("uploading");
           setError(null);
 
-          const response = await uploadRecipeCards(frontImage, backImage);
+          const response = await uploadRecipeCards(frontImage, backImage, provider);
 
           setStatus("processing");
 
@@ -144,6 +145,38 @@ export default function App() {
                       <h2 className="text-xl font-semibold text-gray-800 mb-4">
                           Step 1: Upload Recipe Cards
                       </h2>
+
+                      {/* AI Provider Selection */}
+                      <div className="mb-6">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                              AI Provider
+                          </label>
+                          <div className="flex gap-4">
+                              <label className="flex items-center">
+                                  <input
+                                      type="radio"
+                                      name="provider"
+                                      value="mistral"
+                                      checked={provider === 'mistral'}
+                                      onChange={(e) => setProvider(e.target.value)}
+                                      className="mr-2"
+                                  />
+                                  <span>Mistral (Cloud)</span>
+                              </label>
+                              <label className="flex items-center">
+                                  <input
+                                      type="radio"
+                                      name="provider"
+                                      value="ollama"
+                                      checked={provider === 'ollama'}
+                                      onChange={(e) => setProvider(e.target.value)}
+                                      className="mr-2"
+                                  />
+                                  <span>Ollama (Local)</span>
+                              </label>
+                          </div>
+                      </div>
+
                       <ImageUploader
                           onImagesSelected={handleImagesSelected}
                           frontImage={frontImage}

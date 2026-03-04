@@ -15,10 +15,11 @@ const api = axios.create({
 /**
  * Upload recipe card images
  */
-export async function uploadRecipeCards(frontImage, backImage) {
+export async function uploadRecipeCards(frontImage, backImage, provider = 'mistral') {
   const formData = new FormData();
   formData.append('frontImage', frontImage);
   formData.append('backImage', backImage);
+  formData.append('provider', provider);
 
   const response = await api.post('/upload', formData, {
     headers: {

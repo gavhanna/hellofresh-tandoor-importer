@@ -14,7 +14,8 @@ if [ ! -f .env ]; then
     echo "Creating .env from .env.example..."
     cp .env.example .env
     echo "✅ Created .env file. Please edit it with your configuration:"
-    echo "   - MISTRAL_API_KEY"
+    echo "   - MISTRAL_API_KEY (for Mistral AI)"
+    echo "   - OR OLLAMA_BASE_URL and OLLAMA_MODEL (for Ollama)"
     echo "   - TANDOOR_URL"
     echo "   - TANDOOR_API_TOKEN"
     echo ""
@@ -25,8 +26,22 @@ fi
 source .env
 
 # Check required environment variables
-if [ -z "$MISTRAL_API_KEY" ] || [ "$MISTRAL_API_KEY" = "your_mistral_api_key_here" ]; then
-    echo "❌ MISTRAL_API_KEY not set in .env file"
+# At least one AI provider must be configured
+HAS_MISTRAL=false
+HAS_OLLAMA=false
+
+if [ -n "$MISTRAL_API_KEY" ] && [ "$MISTRAL_API_KEY" != "your_mistral_api_key_here" ]; then
+    HAS_MISTRAL=true
+    echo "✅ Mistral AI configured"
+fi
+
+if [ -n "$OLLAMA_BASE_URL" ]; then
+    HAS_OLLAMA=true
+    echo "✅ Ollama configured"
+fi
+
+if [ "$HAS_MISTRAL" = false ] && [ "$HAS_OLLAMA" = false ]; then
+    echo "❌ No AI provider configured. Please set either MISTRAL_API_KEY or OLLAMA_BASE_URL in .env file"
     exit 1
 fi
 

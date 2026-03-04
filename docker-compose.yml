@@ -12,12 +12,16 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3-vl:4b}
       - TANDOOR_URL=${TANDOOR_URL}
       - TANDOOR_API_TOKEN=${TANDOOR_API_TOKEN}
       - MAX_FILE_SIZE=10485760
       - UPLOAD_DIR=./uploads
     volumes:
       - ./backend/uploads:/app/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     networks:
       - hellofresh-network

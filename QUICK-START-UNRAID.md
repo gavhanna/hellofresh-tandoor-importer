@@ -5,7 +5,9 @@ This is a simplified guide to get HelloFresh Importer running on Unraid as quick
 ## Prerequisites
 
 - Tandoor Recipe Manager already running on Unraid
-- Mistral API key ([get one free here](https://console.mistral.ai/))
+- Either:
+  - Mistral API key ([get one free here](https://console.mistral.ai/)) for cloud AI
+  - OR Ollama running locally or in a Docker container on Unraid for local AI
 
 ## Step-by-Step Instructions
 
@@ -33,7 +35,13 @@ nano .env
 
 Update these values:
 ```env
+# Choose one AI provider (Mistral cloud or Ollama local):
 MISTRAL_API_KEY=sk-xxxxxxxxxxxxxxxxx    # Your Mistral API key
+# OR
+OLLAMA_BASE_URL=http://192.168.1.50:11434  # Your Ollama URL (if using Ollama)
+OLLAMA_MODEL=qwen3-vl:4b                # Ollama model name
+
+# Required:
 TANDOOR_URL=http://192.168.1.100:8080  # Your Tandoor URL
 TANDOOR_API_TOKEN=Token_xxxxxxxxxxxxxx # Your Tandoor API token
 
@@ -41,6 +49,8 @@ TANDOOR_API_TOKEN=Token_xxxxxxxxxxxxxx # Your Tandoor API token
 BACKEND_PORT=3001
 FRONTEND_PORT=5173
 ```
+
+**Note:** If using Ollama in Docker on Unraid, you can use `http://172.17.0.1:11434` or the container name as the URL.
 
 **How to get Tandoor API token:**
 1. Open Tandoor web UI

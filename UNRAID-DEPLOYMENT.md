@@ -7,7 +7,9 @@ This guide will help you deploy the HelloFresh Recipe Importer on your Unraid se
 - Unraid 6.9+ with Docker support
 - Docker Compose Manager plugin (recommended) OR manual docker container setup
 - Tandoor Recipe Manager running on Unraid
-- Mistral API key (free tier available at https://console.mistral.ai/)
+- Either:
+  - Mistral API key (free tier available at https://console.mistral.ai/) for cloud AI
+  - OR Ollama running locally or in a Docker container for local AI
 
 ## Method 1: Using Docker Compose Manager (Recommended)
 
@@ -35,7 +37,10 @@ This guide will help you deploy the HelloFresh Recipe Importer on your Unraid se
    ```
 
    Required values:
-   - `MISTRAL_API_KEY` - Your Mistral AI API key
+   - Choose ONE AI provider:
+     - `MISTRAL_API_KEY` - Your Mistral AI API key (for cloud AI)
+     - OR `OLLAMA_BASE_URL` - Your Ollama URL (e.g., `http://172.17.0.1:11434`) for local AI
+     - AND `OLLAMA_MODEL` - Model name (default: `qwen3-vl:4b`)
    - `TANDOOR_URL` - URL to your Tandoor instance (e.g., `http://192.168.1.100:8080`)
    - `TANDOOR_API_TOKEN` - Your Tandoor API token (get from Tandoor Settings > API)
 
@@ -67,7 +72,9 @@ If you prefer not to use Docker Compose Manager, you can create individual conta
    - **Network Type**: `bridge`
    - **Port Mapping**: `3001:3001`
    - **Environment Variables**:
-     - `MISTRAL_API_KEY=your_key_here`
+     - Choose ONE AI provider:
+       - `MISTRAL_API_KEY=your_key_here` (for Mistral cloud)
+       - OR `OLLAMA_BASE_URL=http://172.17.0.1:11434` and `OLLAMA_MODEL=qwen3-vl:4b` (for Ollama local)
      - `TANDOOR_URL=http://192.168.1.100:8080`
      - `TANDOOR_API_TOKEN=your_token_here`
      - `NODE_ENV=production`

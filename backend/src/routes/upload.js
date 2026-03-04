@@ -2,9 +2,11 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { upload } from '../middleware/upload.js';
 import { processImage } from '../services/imageProcessor.js';
-import { extractRecipeData } from '../services/mistralService.js';
+import { extractRecipeData as extractRecipeDataMistral } from '../services/mistralService.js';
+import { extractRecipeData as extractRecipeDataOllama } from '../services/ollamaService.js';
 import { cleanupTempFiles } from '../utils/tempFiles.js';
 import { logger } from '../utils/logger.js';
+import { config } from '../config/env.js';
 
 const router = express.Router();
 
@@ -44,8 +46,18 @@ router.post('/', upload.fields([
 
     tempFiles.push(frontProcessed, backProcessed);
 
-    // Extract recipe data using Mistral
-    const recipeData = await extractRecipeData(frontProcessed, backProcessed);
+    // Determine which AI provider to use
+    const provider = req.body.provider || 'mistral';
+
+    // Extract recipe data using the selected provider
+    let recipeData;
+    if (provider === 'ollama') {
+      logger.info('Using Ollama provider');
+      recipeData = await extractRecipeDataOllama(frontProcessed, backProcessed);
+    } else {
+      logger.info('Using Mistral provider');
+      recipeData = await extractRecipeDataMistral(frontProcessed, backProcessed);
+    }
 
     // Create session
     const sessionId = uuidv4();

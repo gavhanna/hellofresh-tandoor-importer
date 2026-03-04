@@ -10,6 +10,11 @@ export const config = {
     apiKey: process.env.MISTRAL_API_KEY,
   },
 
+  ollama: {
+    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+    model: process.env.OLLAMA_MODEL || 'qwen3-vl:4b',
+  },
+
   tandoor: {
     url: process.env.TANDOOR_URL,
     apiToken: process.env.TANDOOR_API_TOKEN,
@@ -22,7 +27,7 @@ export const config = {
 };
 
 // Validate required environment variables
-const requiredEnvVars = ['MISTRAL_API_KEY', 'TANDOOR_URL', 'TANDOOR_API_TOKEN'];
+const requiredEnvVars = ['TANDOOR_URL', 'TANDOOR_API_TOKEN'];
 
 export function validateConfig() {
   const missing = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -32,5 +37,13 @@ export function validateConfig() {
     console.warn('⚠️  Please copy .env.example to .env and fill in the values');
   }
 
-  return missing.length === 0;
+  // Check if at least one AI provider is configured
+  const hasMistral = !!process.env.MISTRAL_API_KEY;
+  const hasOllama = !!process.env.OLLAMA_BASE_URL || process.env.OLLAMA_BASE_URL === ''; // Ollama can use default
+
+  if (!hasMistral && !hasOllama) {
+    console.warn('⚠️  Warning: No AI provider configured. Please set either MISTRAL_API_KEY or configure Ollama.');
+  }
+
+  return missing.length === 0 && (hasMistral || hasOllama);
 }
